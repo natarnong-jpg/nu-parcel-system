@@ -355,7 +355,38 @@
                         <div class="absolute inset-4 border-2 border-dashed border-purple-400/70 rounded-xl pointer-events-none flex flex-col justify-between p-3">
                             <div class="flex justify-between text-[10px] text-purple-300 bg-slate-900/60 px-2 py-0.5 rounded backdrop-blur-sm self-start">
                                 <span><i class="fa-solid fa-crop-simple mr-1"></i> วางเอกสาร/สลิปให้อยู่ในกรอบ</span>
-    <!-- MAIN SCRIPT INTEGRATING SUPABASE & PWA -->
+    
+</div>
+                    </div>
+                </div>
+
+                <!-- Upload Section (ส่วนที่หายไป) -->
+                <div id="scanUploadSection" class="space-y-4 hidden flex-1 flex flex-col">
+                    <div class="border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors">
+                        <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-400 mb-3"></i>
+                        <p class="text-sm font-semibold text-slate-700">ลากไฟล์มาวาง หรือ คลิกเพื่อเลือกไฟล์</p>
+                        <p class="text-xs text-slate-500 mt-1 mb-4">รองรับไฟล์รูปภาพ, สลิปโอนเงิน (หลายไฟล์พร้อมกันได้)</p>
+                        
+                        <!-- นี่คือช่องอัปโหลดที่ใส่คำว่า multiple แล้วครับ -->
+                        <input type="file" id="scanFileInput" multiple accept="image/*,application/pdf" onchange="handleScanFileSelect(event)" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div id="scanPreviewContainer" class="hidden flex flex-col items-center justify-center space-y-3 mt-4">
+                    <img id="scannedImagePreview" src="" class="max-h-48 rounded-xl shadow-md border border-slate-200">
+                    <div id="aiScanLoader" class="flex items-center gap-2 text-purple-600 text-xs font-semibold">
+                        <i class="fa-solid fa-robot fa-bounce"></i> AI กำลังอ่านข้อมูล...
+                    </div>
+                    <button id="applyScanBtn" onclick="applyScanDataToForm()" disabled class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium text-sm px-4 py-2.5 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-check-circle mr-1"></i> นำข้อมูลไปใช้ในฟอร์ม
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- MAIN SCRIPT INTEGRATING SUPABASE & PWA -->
     <script>
         // =========================================================================
         // 0. PWA MANIFEST & SERVICE WORKER REGISTRATION (สร้างและลงทะเบียน PWA)
@@ -622,7 +653,7 @@
                 let fileResult = { url: null, name: null };
 
                 if (fileInput.files.length > 0) {
-                    fileResult = await uploadFileToSupabase(fileInput.files[0]);
+                    fileResult = await uploadFileToSupabase(fileInput.files);
                 }
 
                 const summaryText = document.getElementById('inputSummary').value.trim();
@@ -841,7 +872,7 @@
         // 7. SCANNER & CAMERA MODULE (สแกนเอกสาร / รูปภาพ / สลิป)
         // =========================================================================
         let cameraStream = null;
-        let scannedFileBlob = null;
+        let scannedFileBlobs = [];
         let scannedExtractedData = null;
 
         function openScanModal() {
@@ -903,43 +934,55 @@
         }
 
         function captureCameraPhoto() {
-            const video = document.getElementById('scanVideo');
-            const canvas = document.getElementById('scanCanvas');
-            
-            if (!video.videoWidth) {
-                showToast('กล้องยังไม่พร้อมใช้งาน');
-                return;
-            }
+    const video = document.getElementById('scanVideo');
+    const canvas = document.getElementById('scanCanvas');
+    
+    if (!video.videoWidth) {
+        showToast('กล้องยังไม่พร้อมใช้งาน');
+        return;
+    }
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            canvas.toBlob((blob) => {
-                scannedFileBlob = new File([blob], `scan_${Date.now()}.jpg`, { type: 'image/jpeg' });
-                const imageUrl = URL.createObjectURL(blob);
-                displayScannedPreview(imageUrl);
-                processScannedData(scannedFileBlob);
-            }, 'image/jpeg', 0.9);
-
-            stopCameraStream();
-        }
+    canvas.toBlob((blob) => {
+        // สร้างชื่อไฟล์รันตามเวลา
+        const file = new File([blob], `scan_page_${scannedFileBlobs.length + 1}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        scannedFileBlobs.push(file); // เพิ่มไฟล์เข้า Array
+        
+        const imageUrl = URL.createObjectURL(blob);
+        displayScannedPreview(imageUrl);
+        processScannedData(); // อัปเดตข้อมูล AI ขำๆ ว่ามีกี่หน้า
+        
+        showToast(`ถ่ายภาพหน้าที่ ${scannedFileBlobs.length} สำเร็จ (ถ่ายต่อได้เลย)`);
+    }, 'image/jpeg', 0.9);
+    
+    // เอาคำสั่ง stopCameraStream(); ออก เพื่อให้กล้องยังทำงานต่อรอถ่ายหน้าถัดไป
+}
 
         function handleScanFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-            scannedFileBlob = file;
-            if (file.type.startsWith('image/')) {
-                const imageUrl = URL.createObjectURL(file);
-                displayScannedPreview(imageUrl);
-            } else {
-                // PDF fallback icon preview
-                displayScannedPreview('https://placehold.co/600x400/1e1b4b/ffffff?text=PDF+Document+Scanned');
-            }
-            processScannedData(file);
-        }
+    // วนลูปเก็บทุกไฟล์ที่เลือกเข้ามา
+    for (let i = 0; i < files.length; i++) {
+        scannedFileBlobs.push(files[i]);
+    }
+
+    // แสดงพรีวิวไฟล์ล่าสุด
+    const lastFile = files[files.length - 1];
+    if (lastFile.type.startsWith('image/')) {
+        const imageUrl = URL.createObjectURL(lastFile);
+        displayScannedPreview(imageUrl);
+    } else {
+        displayScannedPreview('https://placehold.co/600x400/1e1b4b/ffffff?text=Multiple+Files');
+    }
+    
+    showToast(`เลือกไฟล์ทั้งหมด ${scannedFileBlobs.length} ไฟล์`);
+    processScannedData();
+}
 
         function displayScannedPreview(src) {
             document.getElementById('scannedImagePreview').src = src;
@@ -949,64 +992,42 @@
         }
 
         function resetScanPreview() {
-            document.getElementById('scanPreviewContainer').classList.add('hidden');
-            document.getElementById('applyScanBtn').disabled = true;
-            document.getElementById('scanFileInput').value = '';
-            scannedFileBlob = null;
-            scannedExtractedData = null;
-            if (!document.getElementById('scanCameraSection').classList.contains('hidden')) {
-                startCameraStream();
-            }
-        }
+    document.getElementById('scanPreviewContainer').classList.add('hidden');
+    document.getElementById('applyScanBtn').disabled = true;
+    
+    const fileInput = document.getElementById('scanFileInput'); // ถ้ามี ID นี้
+    if(fileInput) fileInput.value = '';
+    
+    scannedFileBlobs = []; // เคลียร์ Array
+    scannedExtractedData = null;
+    if (!document.getElementById('scanCameraSection').classList.contains('hidden')) {
+        startCameraStream();
+    }
+}
 
-        // AI Document & Slip Content Extractor
-        async function processScannedData(file) {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const isSlip = (file.name || '').toLowerCase().includes('slip') || (file.type || '').includes('image');
+function applyScanDataToForm() {
+    if (!scannedExtractedData) return;
 
-            setTimeout(() => {
-                scannedExtractedData = {
-                    year: '2568',
-                    type: isSlip ? 'พัสดุ/ครุภัณฑ์' : 'คำสั่ง/แจ้งเรียน',
-                    docNo: isSlip ? `SLIP-${Math.floor(100000 + Math.random() * 900000)}` : `นร ${Math.floor(1000 + Math.random() * 9000)}/ว ${Math.floor(10 + Math.random() * 90)}`,
-                    date: todayStr,
-                    title: isSlip ? `หลักฐานการโอนเงิน/ใบเสร็จรับเงิน ค่าพัสดุรับเข้า (${file.name})` : `เอกสารสแกนรับเข้า: ${file.name}`,
-                    detail: `เอกสารนี้สแกนจากระบบเมื่อ ${new Date().toLocaleString('th-TH')} ไฟล์อ้างอิง: ${file.name}`,
-                    summary: [
-                        `1. ตรวจสอบสแกนเอกสาร/หลักฐานสำเร็จ (${file.name})`,
-                        `2. ทำการบันทึกจัดเก็บเข้าสารบบพัสดุอัตโนมัติ`
-                    ]
-                };
+    openAddModal();
 
-                document.getElementById('aiScanLoader').classList.add('hidden');
-                document.getElementById('applyScanBtn').disabled = false;
-                showToast('สกัดข้อมูลจากภาพสแกนสำเร็จ!');
-            }, 1200);
-        }
+    document.getElementById('inputYear').value = scannedExtractedData.year;
+    document.getElementById('inputType').value = scannedExtractedData.type;
+    document.getElementById('inputDocNo').value = scannedExtractedData.docNo;
+    document.getElementById('inputDate').value = scannedExtractedData.date;
+    document.getElementById('inputTitle').value = scannedExtractedData.title;
+    document.getElementById('inputFullDetail').value = scannedExtractedData.detail;
+    document.getElementById('inputSummary').value = scannedExtractedData.summary.join('\n');
 
-        function applyScanDataToForm() {
-            if (!scannedExtractedData) return;
+    // นำไฟล์ทั้งหมดใน Array ยัดใส่ input file ของฟอร์ม
+    if (scannedFileBlobs.length > 0) {
+        const dataTransfer = new DataTransfer();
+        scannedFileBlobs.forEach(file => dataTransfer.items.add(file));
+        document.getElementById('inputFile').files = dataTransfer.files;
+    }
 
-            openAddModal();
-
-            document.getElementById('inputYear').value = scannedExtractedData.year;
-            document.getElementById('inputType').value = scannedExtractedData.type;
-            document.getElementById('inputDocNo').value = scannedExtractedData.docNo;
-            document.getElementById('inputDate').value = scannedExtractedData.date;
-            document.getElementById('inputTitle').value = scannedExtractedData.title;
-            document.getElementById('inputFullDetail').value = scannedExtractedData.detail;
-            document.getElementById('inputSummary').value = scannedExtractedData.summary.join('\n');
-
-            if (scannedFileBlob) {
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(scannedFileBlob);
-                document.getElementById('inputFile').files = dataTransfer.files;
-            }
-
-            closeScanModal();
-            showToast('นำข้อมูลจากภาพสแกนเข้าสู่ฟอร์มบันทึกเรียบร้อย');
-        }
-
+    closeScanModal();
+    showToast(`นำข้อมูลพร้อมไฟล์แนบ ${scannedFileBlobs.length} รายการเข้าฟอร์มแล้ว`);
+}
         // AI Summarization via Supabase Edge Function (No Gemini API key needed in index.html)
         async function generateAISummary() {
             const fullText = document.getElementById('inputFullDetail').value;
