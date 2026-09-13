@@ -23,7 +23,8 @@
     
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    <!-- PDF.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -994,10 +995,10 @@
         let scannedFileBlobs = [];
         let scannedExtractedData = null;
 
-        function openScanModal() {
-            document.getElementById('scanModal').classList.remove('hidden');
-            switchScanTab('camera');
-        }
+function openScanModal() {
+    document.getElementById('scanModal').classList.remove('hidden');
+    switchScanTab('upload');
+}
 
         function closeScanModal() {
             stopCameraStream();
@@ -1078,42 +1079,68 @@
             }, 'image/jpeg', 0.9);
         }
 
-        function handleScanFileSelect(event) {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
+async function handleScanFileSelect(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-            for (let i = 0; i < files.length; i++) {
-                scannedFileBlobs.push(files[i]);
-            }
+    for (let i = 0; i < files.length; i++) {
+        scannedFileBlobs.push(files[i]);
+    }
 
-            const lastFile = files[files.length - 1];
-            if (lastFile.type.startsWith('image/')) {
-                const imageUrl = URL.createObjectURL(lastFile);
-                displayScannedPreview(imageUrl);
-            } else {
-                displayScannedPreview('https://placehold.co/600x400/1e1b4b/ffffff?text=Multiple+Files');
-            }
-            
-            showToast(`เลือกไฟล์ทั้งหมด ${scannedFileBlobs.length} ไฟล์`);
-            processScannedData();
+    const lastFile = files[files.length - 1];
+
+    // ถ้าเป็น PDF ให้แปลงเป็นรูปภาพก่อน
+    if (lastFile.type === 'application/pdf') {
+        const imageUrl = await convertPdfToImage(lastFile);
+        displayScannedPreview(imageUrl);
+    } else if (lastFile.type.startsWith('image/')) {
+        const imageUrl = URL.createObjectURL(lastFile);
+        displayScannedPreview(imageUrl);
+    } else {
+        displayScannedPreview('https://placeholder.co/600x400/1e1b4b/ffffff?text=Multiple+Files');
+    }
+
+    showToast(`เลือกไฟล์ทั้งหมด ${scannedFileBlobs.length} ไฟล์`);
+    processScannedData();
+}
+
+async function processScannedData() {
+    document.getElementById('aiScanLoader').classList.remove('hidden');
+    document.getElementById('applyScanBtn').disabled = true;
+
+    try {
+        const lastFile = scannedFileBlobs[scannedFileBlobs.length - 1];
+        if (!lastFile) return;
+
+        let imageBase64 = '';
+
+        // 1. ถ้าเป็น PDF ให้แปลงเป็น รูปภาพ (Base64) ก่อน
+        if (lastFile.type === 'application/pdf') {
+            imageBase64 = await convertPdfToImage(lastFile);
+        } else {
+            // ถ้าเป็นรูปภาพอยู่แล้ว แปลงเป็น Base64
+            imageBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(lastFile);
+            });
         }
 
-        function processScannedData() {
-            // จำลองการประมวลผลอ่านไฟล์ด้วย AI
-            setTimeout(() => {
-                scannedExtractedData = {
-                    year: "2568",
-                    type: "พัสดุ/ครุภัณฑ์",
-                    docNo: "อว " + Math.floor(1000 + Math.random() * 9000) + "/2568",
-                    date: new Date().toISOString().split('T')[0],
-                    title: "รายการพัสดุรับเข้าจากการสแกนเอกสาร/สลิป",
-                    detail: "รายละเอียดเอกสารที่ดึงข้อมูลสำเร็จจากไฟล์ภาพ/กล้องสแกน",
-                    summary: ["1. ตรวจสอบรายการสแกนเอกสารเรียบร้อยแล้ว", "2. พร้อมนำข้อมูลลงรับเข้าสู่ระบบ"]
-                };
-                document.getElementById('aiScanLoader').classList.add('hidden');
-                document.getElementById('applyScanBtn').disabled = false;
-            }, 800);
-        }
+        // 2. แสดงรูปภาพตัวอย่างในหน้าสแกน
+        displayScannedPreview(imageBase64);
+
+        // 3. ส่ง imageBase64 ไปประมวลผลกับ AI (หรือฟังก์ชัน OCR ของคุณ)
+        // const aiResult = await callGeminiApi(imageBase64); 
+        // scannedExtractedData = aiResult;
+
+    } catch (error) {
+        console.error("Scan Error:", error);
+        showToast("เกิดข้อผิดพลาดในการอ่านไฟล์");
+    } finally {
+        document.getElementById('aiScanLoader').classList.add('hidden');
+        document.getElementById('applyScanBtn').disabled = false;
+    }
+}
 
         function displayScannedPreview(src) {
             document.getElementById('scannedImagePreview').src = src;
