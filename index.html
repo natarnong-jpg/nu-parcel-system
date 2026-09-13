@@ -2,7 +2,15 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#F26522">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="งานพัสดุ NU">
+    <meta name="application-name" content="งานพัสดุและหนังสือรับเข้า">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/F26522/ffffff?text=NU+PWA">
+
     <title>ระบบงานพัสดุและหนังสือรับเข้า | Naresuan University Style</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -99,10 +107,14 @@
                         <i class="fa-solid fa-box-archive"></i>
                     </div>
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white">ระบบงานพัสดุและหนังสือรับเข้า</h1>
                             <span class="bg-gradient-to-r from-nu-orange to-amber-500 text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full shadow-sm flex items-center gap-1">
                                 <i class="fa-solid fa-database text-[10px]"></i> Supabase Connected
+                            </span>
+                            <span id="networkBadge" class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                <i id="networkIcon" class="fa-solid fa-wifi text-[10px]"></i>
+                                <span id="networkText">ออนไลน์</span>
                             </span>
                         </div>
                         <p class="text-xs text-slate-300 font-light mt-0.5">
@@ -112,6 +124,12 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-start md:justify-end">
+                    <!-- PWA Install Button -->
+                    <button id="pwaInstallBtn" onclick="installPWA()" class="hidden inline-flex items-center justify-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium text-sm px-3.5 py-2.5 rounded-xl border border-amber-500/40 shadow-sm transition-all duration-200 active:scale-95">
+                        <i class="fa-solid fa-download"></i>
+                        <span>ติดตั้ง แอปพลิเคชัน</span>
+                    </button>
+
                     <button onclick="openScanModal()" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium text-sm px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95">
                         <i class="fa-solid fa-camera"></i>
                         <span>สแกนเอกสาร/สลิป</span>
@@ -337,127 +355,126 @@
                         <div class="absolute inset-4 border-2 border-dashed border-purple-400/70 rounded-xl pointer-events-none flex flex-col justify-between p-3">
                             <div class="flex justify-between text-[10px] text-purple-300 bg-slate-900/60 px-2 py-0.5 rounded backdrop-blur-sm self-start">
                                 <span><i class="fa-solid fa-crop-simple mr-1"></i> วางเอกสาร/สลิปให้อยู่ในกรอบ</span>
-                            </div>
-                        </div>
-
-                        <div id="cameraStatusText" class="absolute text-xs text-slate-300 bg-slate-900/80 px-3 py-1.5 rounded-xl hidden">
-                            <i class="fa-solid fa-circle-notch fa-spin text-purple-400 mr-1.5"></i> กำลังเปิดกล้อง...
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-center gap-3">
-                        <button type="button" onclick="captureCameraPhoto()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium text-xs px-6 py-2.5 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2">
-                            <i class="fa-solid fa-circle-dot text-rose-400 text-sm"></i>
-                            <span>ถ่ายภาพเอกสาร</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- File Upload Section -->
-                <div id="scanUploadSection" class="hidden space-y-3">
-                    <div onclick="document.getElementById('scanFileInput').click()" class="border-2 border-dashed border-slate-300 hover:border-purple-500 rounded-2xl p-8 text-center bg-slate-50/50 hover:bg-purple-50/30 transition-all cursor-pointer group">
-                        <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
-                        </div>
-                        <p class="text-xs font-bold text-slate-700">คลิกเพื่อเลือกไฟล์เอกสาร / รูปภาพ / สลิปโอนเงิน</p>
-                        <p class="text-[11px] text-slate-400 mt-1">รองรับไฟล์ประเภท PDF, PNG, JPG, JPEG (ขนาดไม่เกิน 10MB)</p>
-                        <input type="file" id="scanFileInput" accept="image/*,.pdf" class="hidden" onchange="handleScanFileSelect(event)">
-                    </div>
-                </div>
-
-                <!-- Scanned Result Preview & AI Processing -->
-                <div id="scanPreviewContainer" class="hidden border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                            <i class="fa-solid fa-image text-purple-600"></i> ตัวอย่างภาพสแกน
-                        </span>
-                        <button type="button" onclick="resetScanPreview()" class="text-[11px] text-rose-600 hover:underline">
-                            <i class="fa-solid fa-rotate-left mr-1"></i> ถ่ายใหม่ / เลือกใหม่
-                        </button>
-                    </div>
-                    
-                    <div class="max-h-48 overflow-hidden rounded-xl border border-slate-200 flex items-center justify-center bg-white">
-                        <img id="scannedImagePreview" class="max-h-48 object-contain w-full" src="" alt="Scanned Preview">
-                    </div>
-
-                    <!-- AI Extraction Status -->
-                    <div id="aiScanLoader" class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-center gap-3">
-                        <i class="fa-solid fa-wand-magic-sparkles text-amber-600 text-lg fa-spin"></i>
-                        <div>
-                            <p class="font-bold text-amber-900">AI กำลังอ่านและวิเคราะห์ข้อมูลจากเอกสาร/สลิป...</p>
-                            <p class="text-[11px] text-amber-700">ระบบกำลังสกัดเลขที่หนังสือ, วันที่, ประเภท และรายละเอียดให้อัตโนมัติ</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-2 p-4 bg-slate-50 border-t border-slate-100">
-                <button type="button" onclick="closeScanModal()" class="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-xl transition-colors">
-                    ยกเลิก
-                </button>
-                <button type="button" id="applyScanBtn" onclick="applyScanDataToForm()" disabled class="px-5 py-2 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-import"></i> <span>นำข้อมูลไปลงรับเอกสาร</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: View Document Detail -->
-    <div id="viewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <!-- ... existing view modal code ... -->
-    </div>
-
-    <!-- Modal: Settings / Configuration -->
-    <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden animate-fade-in">
-            <div class="bg-slate-900 text-white p-4 px-6 flex items-center justify-between border-b-2 border-nu-orange">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-nu-orange"></i>
-                    <h3 class="font-bold text-sm md:text-base text-white">ตั้งค่าการเชื่อมต่อ (API Config)</h3>
-                </div>
-                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-white p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <form onsubmit="saveApiSettings(event)" class="p-6 space-y-4">
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex gap-2">
-                    <i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0 mt-0.5"></i>
-                    <span>ข้อมูล Key จะถูกจัดเก็บอย่างปลอดภัยใน Browser ของคุณเท่านั้น ไม่ถูกนำขึ้น GitHub</span>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Project URL <span class="text-rose-500">*</span></label>
-                    <input type="url" id="cfgSupabaseUrl" required placeholder="https://xxxx.supabase.co" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Anon Key <span class="text-rose-500">*</span></label>
-                    <input type="password" id="cfgSupabaseKey" required placeholder="eyJhbGciOi..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" onclick="closeConfigModal()" class="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
-                        ยกเลิก
-                    </button>
-                    <button type="submit" class="px-5 py-2 text-xs font-medium text-white bg-nu-orange hover:bg-nu-orangeDark rounded-xl shadow-md">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i> บันทึกการตั้งค่า
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl border-l-4 border-nu-orange flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
-        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
-        <span id="toastMessage">การดำเนินการสำเร็จ</span>
-    </div>
-
-    <!-- MAIN SCRIPT INTEGRATING SUPABASE -->
+    <!-- MAIN SCRIPT INTEGRATING SUPABASE & PWA -->
     <script>
         // =========================================================================
-        // 1. ดึงค่า CREDENTIALS จาก LocalStorage (ไม่ต้องใช้ Gemini API Key ในฝั่ง Client)
+        // 0. PWA MANIFEST & SERVICE WORKER REGISTRATION (สร้างและลงทะเบียน PWA)
+        // =========================================================================
+        (function initPWA() {
+            // สร้าง Dynamic Web App Manifest
+            const manifestObj = {
+                name: "ระบบงานพัสดุและหนังสือรับเข้า (NU)",
+                short_name: "งานพัสดุ NU",
+                description: "ระบบลงรับเอกสาร สแกนสลิป และติดตามงานพัสดุ มหาวิทยาลัยนเรศวร",
+                start_url: "./",
+                display: "standalone",
+                background_color: "#0F172A",
+                theme_color: "#F26522",
+                orientation: "portrait-primary",
+                icons: [
+                    {
+                        src: "https://placehold.co/192x192/F26522/ffffff?text=NU+PWA",
+                        sizes: "192x192",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    },
+                    {
+                        src: "https://placehold.co/512x512/F26522/ffffff?text=NU+PWA",
+                        sizes: "512x512",
+                        type: "image/png"
+                    }
+                ]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/json' });
+            const manifestURL = URL.createObjectURL(manifestBlob);
+            const linkEl = document.createElement('link');
+            linkEl.rel = 'manifest';
+            linkEl.href = manifestURL;
+            document.head.appendChild(linkEl);
+
+            // ลงทะเบียน Service Worker แบบ Inline Blob
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    const CACHE_NAME = 'nu-parcel-pwa-v1';
+                    self.addEventListener('install', (e) => {
+                        e.waitUntil(
+                            caches.open(CACHE_NAME).then((cache) => {
+                                return cache.addAll(['./']).catch(() => {});
+                            })
+                        );
+                        self.skipWaiting();
+                    });
+
+                    self.addEventListener('activate', (e) => {
+                        e.waitUntil(clients.claim());
+                    });
+
+                    self.addEventListener('fetch', (e) => {
+                        if (e.request.method !== 'GET') return;
+                        e.respondWith(
+                            fetch(e.request).catch(() => {
+                                return caches.match(e.request);
+                            })
+                        );
+                    });
+                `;
+                const swBlob = new Blob([swCode], { type: 'text/javascript' });
+                const swURL = URL.createObjectURL(swBlob);
+
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register(swURL).then(() => {
+                        console.log('PWA Service Worker registered successfully.');
+                    }).catch(err => console.log('SW reg error:', err));
+                });
+            }
+        })();
+
+        // ตัวแปร PWA Prompt Handling
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('pwaInstallBtn');
+            if (btn) btn.classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    showToast('กำลังติดตั้งแอปพลิเคชันลงบนเครื่อง...');
+                    document.getElementById('pwaInstallBtn').classList.add('hidden');
+                }
+                deferredPrompt = null;
+            });
+        }
+
+        // ติดตามสถานะ Online / Offline
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+
+        function updateNetworkStatus() {
+            const badge = document.getElementById('networkBadge');
+            const text = document.getElementById('networkText');
+            const icon = document.getElementById('networkIcon');
+
+            if (navigator.onLine) {
+                badge.className = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1";
+                icon.className = "fa-solid fa-wifi text-[10px]";
+                text.innerText = "ออนไลน์";
+                showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว');
+                fetchDocuments();
+            } else {
+                badge.className = "bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1";
+                icon.className = "fa-solid fa-plane text-[10px]";
+                text.innerText = "ออฟไลน์ (ใช้งานจากแคช)";
+                showToast('กำลังใช้งานโหมดออฟไลน์');
+            }
+        }
+
+        // =========================================================================
+        // 1. ดึงค่า CREDENTIALS จาก LocalStorage
         // =========================================================================
         let SUPABASE_URL = localStorage.getItem('NU_SUPABASE_URL') || '';
         let SUPABASE_ANON_KEY = localStorage.getItem('NU_SUPABASE_KEY') || '';
@@ -467,6 +484,7 @@
 
         // DOM Loaded Event
         document.addEventListener('DOMContentLoaded', () => {
+            updateNetworkStatus();
             initSupabaseClient();
         });
 
@@ -527,10 +545,20 @@
         }
 
         // =========================================================================
-        // 2. ฟังก์ชันดึงข้อมูลทั้งหมดจาก SUPABASE DATABASE
+        // 2. ฟังก์ชันดึงข้อมูลทั้งหมดจาก SUPABASE DATABASE (พร้อมระบบ Offline Cache)
         // =========================================================================
         async function fetchDocuments() {
-            if (!supabaseClient) return;
+            // โหลดข้อมูลออฟไลน์จาก LocalStorage ก่อน
+            const cachedData = localStorage.getItem('NU_OFFLINE_DOCS_CACHE');
+            if (cachedData) {
+                try {
+                    documentsData = JSON.parse(cachedData);
+                    renderTable();
+                    updateStats();
+                } catch(e) {}
+            }
+
+            if (!supabaseClient || !navigator.onLine) return;
 
             try {
                 const { data, error } = await supabaseClient
@@ -541,11 +569,14 @@
                 if (error) throw error;
 
                 documentsData = data || [];
+                // บันทึกใส่ LocalStorage สำหรับเปิดอ่านออฟไลน์
+                localStorage.setItem('NU_OFFLINE_DOCS_CACHE', JSON.stringify(documentsData));
+                
                 renderTable();
                 updateStats();
             } catch (err) {
                 console.error('Error fetching documents:', err.message);
-                showToast('ไม่สามารถดึงข้อมูลได้: ' + err.message);
+                showToast('โหลดจากฐานข้อมูลล้มเหลว: แสดงข้อมูลแคชในเครื่อง');
             }
         }
 
