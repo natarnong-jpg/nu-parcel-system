@@ -994,7 +994,18 @@
         let cameraStream = null;
         let scannedFileBlobs = [];
         let scannedExtractedData = null;
-
+async function convertPdfToImage(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1);
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const viewport = page.getViewport({ scale: 1.5 });
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    await page.render({ canvasContext: context, viewport: viewport }).promise;
+    return canvas.toDataURL('image/png');
+}
 function openScanModal() {
     document.getElementById('scanModal').classList.remove('hidden');
     switchScanTab('upload');
