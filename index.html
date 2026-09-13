@@ -10,7 +10,7 @@
     <meta name="application-name" content="งานพัสดุและหนังสือรับเข้า">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/F26522/ffffff?text=NU+PWA">
-
+	<link rel="manifest" href="manifest.json">
     <title>ระบบงานพัสดุและหนังสือรับเข้า | Naresuan University Style</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1331,7 +1331,17 @@ function applyScanDataToForm() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', populateYearDropdowns);
-    </script>
+document.addEventListener('DOMContentLoaded', () => {
+    populateYearDropdowns();
+    
+    // วางตรงนี้ได้เลยครับ
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW Registered:', reg))
+            .catch(err => console.log('SW Reg Error:', err));
+    }
+});	
+	
+	</script>
 </body>
 </html>
