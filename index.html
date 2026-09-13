@@ -236,14 +236,16 @@
     <option value="2566">2566</option>
 </select>
 
-                            <select id="filterType" onchange="renderTable()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-nu-orange/50">
-                                <option value="">ประเภทหนังสือ (ทั้งหมด)</option>
-                                <option value="หารือ">หารือ</option>
-                                <option value="อุทธรณ์">อุทธรณ์</option>
-                                <option value="คำสั่ง/แจ้งเรียน">คำสั่ง/แจ้งเรียน</option>
-                                <option value="พัสดุ/ครุภัณฑ์">พัสดุ/ครุภัณฑ์</option>
-                                <option value="ทั่วไป">ทั่วไป</option>
-                            </select>
+<select id="docType" class="w-full p-2 border rounded-md">
+    <option value="หนังสือแนวปฏิบัติ">หนังสือแนวปฏิบัติ</option>
+    <option value="หนังสือหารือ">หนังสือหารือ</option>
+    <option value="หนังสือเวียน">หนังสือเวียน</option>
+    <option value="หนังสือภายนอก">หนังสือภายนอก</option>
+    <option value="หนังสือภายใน">หนังสือภายใน</option>
+    <option value="พัสดุ/ครุภัณฑ์">พัสดุ/ครุภัณฑ์</option>
+    <option value="คำสั่ง/ประกาศ">คำสั่ง/ประกาศ</option>
+    <option value="สัญญา/ข้อตกลง">สัญญา/ข้อตกลง</option>
+</select>
 
                             <button onclick="resetFilters()" class="text-xs text-slate-500 hover:text-nu-orange font-medium px-2 py-1.5 transition-colors">
                                 <i class="fa-solid fa-rotate-left mr-1"></i> ล้างตัวกรอง
