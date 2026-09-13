@@ -1245,7 +1245,7 @@ function applyScanDataToForm() {
 
             try {
                 if (supabaseClient && supabaseClient.functions) {
-                    const { data, error } = await supabaseClient.functions.invoke('summarize', {
+                    const { data, error } = await supabaseClient.functions.invoke('quick-endpoint', {
                         body: { text: fullText }
                     });
 
