@@ -1140,19 +1140,38 @@ async function processScannedData() {
 
         displayScannedPreview(imageBase64);
 
+        // 1. เรียก Supabase Edge Function (เปลี่ยนชื่อ 'scan-document' ให้ตรงกับชื่อ Function ใน Supabase ของคุณ)
+        const { data, error } = await supabaseClient.functions.invoke('quick-endpoint', {
+            body: { image: imageBase64 }
+        });
+
+        if (error) throw error;
+
+        // 2. นำข้อมูลที่ AI อ่านได้ มาใส่ในตัวแปรเพื่อส่งเข้าฟอร์ม
         scannedExtractedData = {
-            year: new Date().getFullYear() + 543 + "",
-            type: "พัสดุ/ครุภัณฑ์",
-            docNo: "", 
-            date: new Date().toISOString().split('T')[0],
-            title: lastFile.name.replace(/\.[^/.]+$/, ""),
-            detail: "เอกสารจากไฟล์สแกน: " + lastFile.name,
-            summary: "1. ตรวจสอบรายละเอียดและกรอกเลขที่หนังสือ\n2. พร้อมบันทึกข้อมูลเข้าสู่ระบบ"
+            year: data?.year || (new Date().getFullYear() + 543 + ""),
+            type: data?.type || "พัสดุ/ครุภัณฑ์",
+            docNo: data?.docNo || "", // เลขที่หนังสือ (เช่น อว 0605/123) ที่ AI แกะได้
+            date: data?.date || new Date().toISOString().split('T')[0],
+            title: data?.title || lastFile.name.replace(/\.[^/.]+$/, ""),
+            detail: data?.detail || ("เอกสารจากไฟล์สแกน: " + lastFile.name),
+            summary: data?.summary || "1. สแกนและอ่านข้อมูลด้วย AI สำเร็จ"
         };
 
     } catch (error) {
-        console.error("Scan Error:", error);
-        showToast("เกิดข้อผิดพลาดในการอ่านไฟล์");
+        console.error("Edge Function Scan Error:", error);
+        showToast("ไม่สามารถอ่านข้อมูลด้วย AI ได้ (ใช้ข้อมูลเริ่มต้น)");
+        
+        // กรณี Edge Function ขัดข้อง ให้ใช้ค่าเริ่มต้นสำรองไว้
+        scannedExtractedData = {
+            year: new Date().getFullYear() + 543 + "",
+            type: "พัสดุ/ครุภัณฑ์",
+            docNo: "",
+            date: new Date().toISOString().split('T')[0],
+            title: scannedFileBlobs[scannedFileBlobs.length - 1]?.name.replace(/\.[^/.]+$/, "") || "",
+            detail: "เอกสารจากไฟล์สแกน",
+            summary: "กรุณาตรวจสอบและกรอกข้อมูลเพิ่มเติม"
+        };
     } finally {
         document.getElementById('aiScanLoader').classList.add('hidden');
         document.getElementById('applyScanBtn').disabled = false;
