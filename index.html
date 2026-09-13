@@ -227,12 +227,14 @@
                                 <input type="text" id="searchInput" oninput="renderTable()" placeholder="ค้นหาเลขที่, เรื่อง, คำสำคัญ..." class="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-nu-orange/50 focus:border-nu-orange transition-all bg-white">
                             </div>
 
-                            <select id="filterYear" onchange="renderTable()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-nu-orange/50">
-                                <option value="">ปี พ.ศ. (ทั้งหมด)</option>
-                                <option value="2568">2568</option>
-                                <option value="2567">2567</option>
-                                <option value="2566">2566</option>
-                            </select>
+                            <select id="filterYear" onchange="renderTable()" class="...">
+    <option value="">ปี พ.ศ. (ทั้งหมด)</option>
+    <option value="2570">2570</option>
+    <option value="2569">2569</option>
+    <option value="2568">2568</option>
+    <option value="2567">2567</option>
+    <option value="2566">2566</option>
+</select>
 
                             <select id="filterType" onchange="renderTable()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-nu-orange/50">
                                 <option value="">ประเภทหนังสือ (ทั้งหมด)</option>
@@ -1277,6 +1279,32 @@ async function processScannedData() {
                 toast.classList.remove('translate-y-0', 'opacity-100');
             }, 3000);
         }
+        function populateYearDropdowns() {
+    const currentYearBE = new Date().getFullYear() + 543;
+    const years = [];
+    
+    // สร้างช่วงปี: ล่วงหน้า 3 ปี ถึง ย้อนหลัง 5 ปี
+    for (let y = currentYearBE + 3; y >= currentYearBE - 5; y--) {
+        years.push(y);
+    }
+
+    // 1. ใส่ในฟอร์มลงรับเอกสาร (inputYear)
+    const inputYearSelect = document.getElementById('inputYear');
+    if (inputYearSelect) {
+        inputYearSelect.innerHTML = years.map(y => 
+            `<option value="${y}" ${y === currentYearBE ? 'selected' : ''}>${y}</option>`
+        ).join('');
+    }
+
+    // 2. ใส่ในตัวกรองหน้าตาราง (filterYear)
+    const filterYearSelect = document.getElementById('filterYear');
+    if (filterYearSelect) {
+        filterYearSelect.innerHTML = `<option value="">ปี พ.ศ. (ทั้งหมด)</option>` + 
+            years.map(y => `<option value="${y}">${y}</option>`).join('');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', populateYearDropdowns);
     </script>
 </body>
 </html>
