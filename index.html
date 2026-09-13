@@ -995,6 +995,8 @@
         let scannedFileBlobs = [];
         let scannedExtractedData = null;
 async function convertPdfToImage(file) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     const page = await pdf.getPage(1);
@@ -1124,12 +1126,9 @@ async function processScannedData() {
         if (!lastFile) return;
 
         let imageBase64 = '';
-
-        // 1. ถ้าเป็น PDF ให้แปลงเป็น รูปภาพ (Base64) ก่อน
         if (lastFile.type === 'application/pdf') {
             imageBase64 = await convertPdfToImage(lastFile);
         } else {
-            // ถ้าเป็นรูปภาพอยู่แล้ว แปลงเป็น Base64
             imageBase64 = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
@@ -1137,12 +1136,17 @@ async function processScannedData() {
             });
         }
 
-        // 2. แสดงรูปภาพตัวอย่างในหน้าสแกน
         displayScannedPreview(imageBase64);
 
-        // 3. ส่ง imageBase64 ไปประมวลผลกับ AI (หรือฟังก์ชัน OCR ของคุณ)
-        // const aiResult = await callGeminiApi(imageBase64); 
-        // scannedExtractedData = aiResult;
+        scannedExtractedData = {
+            year: new Date().getFullYear() + 543 + "",
+            type: "พัสดุ/ครุภัณฑ์",
+            docNo: "", 
+            date: new Date().toISOString().split('T')[0],
+            title: lastFile.name.replace(/\.[^/.]+$/, ""),
+            detail: "เอกสารจากไฟล์สแกน: " + lastFile.name,
+            summary: "1. ตรวจสอบรายละเอียดและกรอกเลขที่หนังสือ\n2. พร้อมบันทึกข้อมูลเข้าสู่ระบบ"
+        };
 
     } catch (error) {
         console.error("Scan Error:", error);
