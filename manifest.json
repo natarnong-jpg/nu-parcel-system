@@ -1,14 +1,21 @@
-"icons": [
-  {
-    "src": "/icons/icon-192.png",
-    "type": "image/png",
-    "sizes": "192x192",
-    "purpose": "any maskable"
-  },
-  {
-    "src": "/icons/icon-512.png",
-    "type": "image/png",
-    "sizes": "512x512",
-    "purpose": "any maskable"
-  }
-]
+{
+  "short_name": "NU Parcel",
+  "name": "ระบบงานพัสดุและหนังสือรับเข้า - มหาวิทยาลัยนเรศวร",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/nu-parcel-system/",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait-primary"
+}
