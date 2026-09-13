@@ -1199,28 +1199,33 @@ async function processScannedData() {
             }
         }
 
-        function applyScanDataToForm() {
-            if (!scannedExtractedData) return;
+function applyScanDataToForm() {
+    if (!scannedExtractedData) return;
 
-            openAddModal();
+    openAddModal();
 
-            document.getElementById('inputYear').value = scannedExtractedData.year;
-            document.getElementById('inputType').value = scannedExtractedData.type;
-            document.getElementById('inputDocNo').value = scannedExtractedData.docNo;
-            document.getElementById('inputDate').value = scannedExtractedData.date;
-            document.getElementById('inputTitle').value = scannedExtractedData.title;
-            document.getElementById('inputFullDetail').value = scannedExtractedData.detail;
-            document.getElementById('inputSummary').value = scannedExtractedData.summary.join('\n');
+    if (scannedExtractedData.year) document.getElementById('inputYear').value = scannedExtractedData.year;
+    if (scannedExtractedData.type) document.getElementById('inputType').value = scannedExtractedData.type;
+    if (scannedExtractedData.docNo) document.getElementById('inputDocNo').value = scannedExtractedData.docNo;
+    if (scannedExtractedData.date) document.getElementById('inputDate').value = scannedExtractedData.date;
+    if (scannedExtractedData.title) document.getElementById('inputTitle').value = scannedExtractedData.title;
+    if (scannedExtractedData.detail) document.getElementById('inputFullDetail').value = scannedExtractedData.detail;
 
-            if (scannedFileBlobs.length > 0) {
-                const dataTransfer = new DataTransfer();
-                scannedFileBlobs.forEach(file => dataTransfer.items.add(file));
-                document.getElementById('inputFile').files = dataTransfer.files;
-            }
+    // แก้ไขจุดนี้: รองรับทั้งข้อความธรรมดา (String) และแบบรายการ (Array) เพื่อป้องกัน Error
+    const summaryText = Array.isArray(scannedExtractedData.summary) 
+        ? scannedExtractedData.summary.join('\n') 
+        : (scannedExtractedData.summary || '');
+    document.getElementById('inputSummary').value = summaryText;
 
-            closeScanModal();
-            showToast(`นำข้อมูลพร้อมไฟล์แนบ ${scannedFileBlobs.length} รายการเข้าฟอร์มแล้ว`);
-        }
+    if (scannedFileBlobs.length > 0) {
+        const dataTransfer = new DataTransfer();
+        scannedFileBlobs.forEach(file => dataTransfer.items.add(file));
+        document.getElementById('inputFile').files = dataTransfer.files;
+    }
+
+    closeScanModal();
+    showToast(`นำข้อมูลพร้อมไฟล์แนบ ${scannedFileBlobs.length} รายการเข้าฟอร์มแล้ว`);
+}
 
         // AI Summarization
         async function generateAISummary() {
