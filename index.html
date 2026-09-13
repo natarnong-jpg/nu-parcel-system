@@ -1120,13 +1120,14 @@ async function handleScanFileSelect(event) {
 }
 
 async function processScannedData() {
-    document.getElementById('aiScanLoader').classList.remove('hidden');
+    document.getElementById('aiScanLoader')?.classList.remove('hidden');
     document.getElementById('applyScanBtn').disabled = true;
 
-    try {
-        const lastFile = scannedFileBlobs[scannedFileBlobs.length - 1];
-        if (!lastFile) return;
+    // ประกาศตัวแปรไว้นอก try เพื่อให้ catch เรียกใช้ได้เสมอ
+    const lastFile = scannedFileBlobs[scannedFileBlobs.length - 1];
+    if (!lastFile) return;
 
+    try {
         let imageBase64 = '';
         if (lastFile.type === 'application/pdf') {
             imageBase64 = await convertPdfToImage(lastFile);
@@ -1140,44 +1141,42 @@ async function processScannedData() {
 
         displayScannedPreview(imageBase64);
 
-        // 1. เรียก Supabase Edge Function (เปลี่ยนชื่อ 'scan-document' ให้ตรงกับชื่อ Function ใน Supabase ของคุณ)
+        // ยิง request ไปที่ Edge Function
         const { data, error } = await supabaseClient.functions.invoke('quick-endpoint', {
             body: { image: imageBase64 }
         });
 
         if (error) throw error;
 
-        // 2. นำข้อมูลที่ AI อ่านได้ มาใส่ในตัวแปรเพื่อส่งเข้าฟอร์ม
         scannedExtractedData = {
             year: data?.year || (new Date().getFullYear() + 543 + ""),
             type: data?.type || "พัสดุ/ครุภัณฑ์",
-            docNo: data?.docNo || "", // เลขที่หนังสือ (เช่น อว 0605/123) ที่ AI แกะได้
+            docNo: data?.docNo || "",
             date: data?.date || new Date().toISOString().split('T')[0],
             title: data?.title || lastFile.name.replace(/\.[^/.]+$/, ""),
             detail: data?.detail || ("เอกสารจากไฟล์สแกน: " + lastFile.name),
-            summary: data?.summary || "1. สแกนและอ่านข้อมูลด้วย AI สำเร็จ"
+            summary: data?.summary || "1. สแกนเอกสารสำเร็จ"
         };
 
-} catch (error) {
+    } catch (error) {
         console.error("Edge Function Scan Error:", error);
-        showToast("ไม่สามารถอ่านข้อมูลด้วย AI ได้ (ใช้ข้อมูลสำรองจากชื่อไฟล์)");
         
-        // ดึงข้อความส่วนแรกของชื่อไฟล์มาเป็นเลขที่หนังสือสำรอง (ตัดเฉพาะช่วงก่อนคำว่า การอนุมัติ/เรื่อง)
+        // ดึงเลขที่หนังสือจากชื่อไฟล์สำรอง (เช่น กวว_ว630_200869)
         const fileNameWithoutExt = lastFile.name.replace(/\.[^/.]+$/, "");
-        const fallbackDocNo = fileNameWithoutExt.split('_').slice(0, 3).join(' ');
+        const nameParts = fileNameWithoutExt.split('_');
+        const fallbackDocNo = nameParts.length >= 3 ? `${nameParts[0]} ${nameParts[1]} ${nameParts[2]}` : fileNameWithoutExt;
 
         scannedExtractedData = {
             year: new Date().getFullYear() + 543 + "",
             type: "พัสดุ/ครุภัณฑ์",
-            docNo: fallbackDocNo || "", // ดึง กวว _ว630_200869 มาใส่เป็นเลขที่หนังสือให้อัตโนมัติ
+            docNo: fallbackDocNo, // นำเลขจากชื่อไฟล์มาใส่ทันที
             date: new Date().toISOString().split('T')[0],
             title: fileNameWithoutExt,
             detail: "เอกสารจากไฟล์สแกน: " + lastFile.name,
-            summary: "1. ตรวจสอบรายละเอียดเอกสารสแกน\n2. บันทึกข้อมูลเข้าสู่ระบบ"
+            summary: "1. อ่านข้อมูลสำรองจากชื่อไฟล์สำเร็จ\n2. โปรดตรวจสอบความถูกต้องก่อนบันทึก"
         };
-    
     } finally {
-        document.getElementById('aiScanLoader').classList.add('hidden');
+        document.getElementById('aiScanLoader')?.classList.add('hidden');
         document.getElementById('applyScanBtn').disabled = false;
     }
 }
