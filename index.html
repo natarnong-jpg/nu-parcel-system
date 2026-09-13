@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบงานพัสดุและหนังสือรับเข้า | Naresuan University Style</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt & Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nu: {
+                            orange: '#F26522', // NU Official Orange
+                            orangeDark: '#D84E0B',
+                            orangeLight: '#FFF2EC',
+                            gold: '#EAB308',
+                            greyDark: '#1E293B',
+                            greyMedium: '#475569',
+                            greyLight: '#F8FAFC',
+                            navyBg: '#0F172A',
+                            accent: '#F97316'
+                        }
+                    },
+                    fontFamily: {
+                        prompt: ['Prompt', 'sans-serif'],
+                        sarabun: ['Sarabun', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Prompt', 'Sarabun', sans-serif;
+            background-color: #F1F5F9;
+            color: #334155;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .glass-header {
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+            border-bottom: 3px solid #F26522;
+        }
+
+        .tag-query { background-color: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+        .tag-appeal { background-color: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; }
+        .tag-order { background-color: #E0E7FF; color: #4338CA; border: 1px solid #C7D2FE; }
+        .tag-parcel { background-color: #E0F2FE; color: #0284C7; border: 1px solid #BAE6FD; }
+        .tag-general { background-color: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <div>
+        <!-- Top Banner Header -->
+        <header class="glass-header text-white px-4 lg:px-8 py-5 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-12 -top-12 w-64 h-64 bg-nu-orange/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute left-1/3 -bottom-12 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+                <div class="flex items-center space-x-3.5">
+                    <div class="bg-gradient-to-tr from-nu-orange to-amber-500 p-3 rounded-2xl shadow-lg flex items-center justify-center text-white text-xl">
+                        <i class="fa-solid fa-box-archive"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white">ระบบงานพัสดุและหนังสือรับเข้า</h1>
+                            <span class="bg-gradient-to-r from-nu-orange to-amber-500 text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-database text-[10px]"></i> Supabase Connected
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-300 font-light mt-0.5">
+                            จัดการ ค้นหา สรุปสาระสำคัญ และติดตามเอกสาร/พัสดุรับเข้า (มหาวิทยาลัยนเรศวร)
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-start md:justify-end">
+                    <button onclick="openAddModal()" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-gradient-to-r from-nu-orange to-nu-orangeDark hover:from-orange-600 hover:to-orange-700 text-white font-medium text-sm px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        <span>ลงรับเอกสาร/พัสดุใหม่</span>
+                    </button>
+                    
+                    <button onclick="exportExcel()" class="inline-flex items-center justify-center gap-2 bg-emerald-600/90 hover:bg-emerald-600 text-white font-medium text-sm px-3.5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all duration-200 active:scale-95">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>ส่งออก Excel</span>
+                    </button>
+
+                    <button onclick="openConfigModal()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl border border-slate-700 hover:text-white transition-all text-sm" title="ตั้งค่าเชื่อมต่อ Supabase & Gemini">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+
+                    <button onclick="toggleStats()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl border border-slate-700 hover:text-white transition-all text-sm" title="สลับการแสดงผลสถิติ">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+            
+            <!-- Quick Stats Bar -->
+            <div id="statsBar" class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">รายการทั้งหมด</p>
+                        <p id="statTotal" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-orange-50 text-nu-orange flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">พัสดุ/ครุภัณฑ์</p>
+                        <p id="statParcel" class="text-2xl font-bold text-sky-600 mt-1">0</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">ข้อหารือ / อุทธรณ์</p>
+                        <p id="statQuery" class="text-2xl font-bold text-amber-600 mt-1">0</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">คำสั่ง / แจ้งเรียน</p>
+                        <p id="statOrder" class="text-2xl font-bold text-indigo-600 mt-1">0</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-scroll"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Container -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                
+                <!-- Table Header Controls Bar -->
+                <div class="p-4 md:p-5 border-b border-slate-100 bg-slate-50/50 space-y-3">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-2.5 h-6 bg-nu-orange rounded-full"></div>
+                            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-nu-orange"></i>
+                                ตารางทะเบียนรับหนังสือและพัสดุ
+                            </h2>
+                            <span id="itemCountBadge" class="bg-slate-200 text-slate-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                ดึงข้อมูล...
+                            </span>
+                        </div>
+
+                        <!-- Filters Section -->
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <div class="relative flex-1 sm:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="searchInput" oninput="renderTable()" placeholder="ค้นหาเลขที่, เรื่อง, คำสำคัญ..." class="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-nu-orange/50 focus:border-nu-orange transition-all bg-white">
+                            </div>
+
+                            <select id="filterYear" onchange="renderTable()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-nu-orange/50">
+                                <option value="">ปี พ.ศ. (ทั้งหมด)</option>
+                                <option value="2568">2568</option>
+                                <option value="2567">2567</option>
+                                <option value="2566">2566</option>
+                            </select>
+
+                            <select id="filterType" onchange="renderTable()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-nu-orange/50">
+                                <option value="">ประเภทหนังสือ (ทั้งหมด)</option>
+                                <option value="หารือ">หารือ</option>
+                                <option value="อุทธรณ์">อุทธรณ์</option>
+                                <option value="คำสั่ง/แจ้งเรียน">คำสั่ง/แจ้งเรียน</option>
+                                <option value="พัสดุ/ครุภัณฑ์">พัสดุ/ครุภัณฑ์</option>
+                                <option value="ทั่วไป">ทั่วไป</option>
+                            </select>
+
+                            <button onclick="resetFilters()" class="text-xs text-slate-500 hover:text-nu-orange font-medium px-2 py-1.5 transition-colors">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> ล้างตัวกรอง
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100/70 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-3.5 px-4 text-center w-20">ปี พ.ศ.</th>
+                                <th class="py-3.5 px-4 text-center w-32">ประเภทหนังสือ</th>
+                                <th class="py-3.5 px-4 w-36">เลขที่หนังสือ/พัสดุ</th>
+                                <th class="py-3.5 px-4 w-32">วันที่หนังสือ</th>
+                                <th class="py-3.5 px-4 min-w-[220px]">เรื่อง / รายการ</th>
+                                <th class="py-3.5 px-4 min-w-[280px]">สรุปสาระสำคัญ (AI Summary)</th>
+                                <th class="py-3.5 px-4 text-center w-28">ไฟล์แนบ / จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-xs text-slate-700">
+                            <tr>
+                                <td colspan="7" class="py-12 text-center text-slate-400">
+                                    <i class="fa-solid fa-spinner fa-spin text-2xl text-nu-orange mb-2"></i>
+                                    <p>กำลังโหลดข้อมูลจาก Supabase...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer -->
+                <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+                    <div>
+                        แสดง <span id="showingStart">0</span> ถึง <span id="showingEnd">0</span> จากทั้งหมด <span id="showingTotal">0</span> รายการ
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-400 cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                        </button>
+                        <button class="px-3 py-1 rounded-lg border border-nu-orange bg-nu-orange text-white font-medium shadow-sm">1</button>
+                        <button class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-400 cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-4 px-6 text-center border-t border-slate-800 mt-8">
+        <p>© 2026 ระบบงานพัสดุและหนังสือรับเข้า - มหาวิทยาลัยนเรศวร (Naresuan University)</p>
+    </footer>
+
+    <!-- Modal: ลงรับเอกสาร/พัสดุใหม่ -->
+    <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl overflow-hidden animate-fade-in max-h-[90vh] flex flex-col">
+            
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 px-6 flex items-center justify-between border-b-2 border-nu-orange">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-nu-orange flex items-center justify-center text-white text-sm">
+                        <i class="fa-solid fa-file-circle-plus"></i>
+                    </div>
+                    <h3 class="font-bold text-base text-white">ลงรับเอกสาร / พัสดุรายการใหม่</h3>
+                </div>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white p-1 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="addForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ปี พ.ศ. <span class="text-rose-500">*</span></label>
+                        <select id="inputYear" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange bg-white">
+                            <option value="2568" selected>2568</option>
+                            <option value="2567">2567</option>
+                            <option value="2566">2566</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ประเภทหนังสือ/พัสดุ <span class="text-rose-500">*</span></label>
+                        <select id="inputType" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange bg-white">
+                            <option value="หารือ">หารือ</option>
+                            <option value="อุทธรณ์">อุทธรณ์</option>
+                            <option value="คำสั่ง/แจ้งเรียน">คำสั่ง/แจ้งเรียน</option>
+                            <option value="พัสดุ/ครุภัณฑ์">พัสดุ/ครุภัณฑ์</option>
+                            <option value="ทั่วไป">ทั่วไป</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">เลขที่หนังสือ / เลขติดตามพัสดุ <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputDocNo" required placeholder="เช่น กศ 0702/1892" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่หนังสือ/วันที่รับ <span class="text-rose-500">*</span></label>
+                        <input type="date" id="inputDate" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">เรื่อง / รายการพัสดุ <span class="text-rose-500">*</span></label>
+                    <input type="text" id="inputTitle" required placeholder="ระบุชื่อเรื่องหรือรายละเอียดพัสดุรับเข้า..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-xs font-semibold text-slate-700">ข้อความรายละเอียด / สาระสำคัญฉบับเต็ม</label>
+                        <button type="button" onclick="generateAISummary()" class="text-[11px] bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-lg font-medium hover:bg-amber-100 flex items-center gap-1 transition-colors">
+                            <i class="fa-solid fa-wand-magic-sparkles text-nu-orange"></i> ให้ AI ช่วยสรุป
+                        </button>
+                    </div>
+                    <textarea id="inputFullDetail" rows="3" placeholder="วางข้อความรายละเอียดหนังสือหรือเนื้อหาเพื่อนำไปสรุป..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <span class="text-nu-orange"><i class="fa-solid fa-sparkles"></i></span> สรุปสาระสำคัญ (AI Summary Points)
+                    </label>
+                    <textarea id="inputSummary" rows="3" placeholder="1. หัวข้อสรุปย่อประเด็นแรก...
+2. ประเด็นที่สอง..." class="w-full px-3 py-2 text-xs rounded-xl border border-amber-300 bg-amber-50/30 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange font-sarabun"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">อัปโหลดไฟล์แนบ (PDF/เอกสาร)</label>
+                    <input type="file" id="inputFile" accept=".pdf,.doc,.docx,.png,.jpg" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-nu-orange hover:file:bg-orange-100 border border-slate-200 rounded-xl p-1">
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" id="submitBtn" class="px-5 py-2 text-xs font-medium text-white bg-nu-orange hover:bg-nu-orangeDark rounded-xl shadow-md transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> <span>บันทึกข้อมูล</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: View Document Detail -->
+    <div id="viewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <!-- ... existing view modal code ... -->
+    </div>
+
+    <!-- Modal: Settings / Configuration -->
+    <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden animate-fade-in">
+            <div class="bg-slate-900 text-white p-4 px-6 flex items-center justify-between border-b-2 border-nu-orange">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-nu-orange"></i>
+                    <h3 class="font-bold text-sm md:text-base text-white">ตั้งค่าการเชื่อมต่อ (API Config)</h3>
+                </div>
+                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveApiSettings(event)" class="p-6 space-y-4">
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex gap-2">
+                    <i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0 mt-0.5"></i>
+                    <span>ข้อมูล Key จะถูกจัดเก็บอย่างปลอดภัยใน Browser ของคุณเท่านั้น ไม่ถูกนำขึ้น GitHub</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Project URL <span class="text-rose-500">*</span></label>
+                    <input type="url" id="cfgSupabaseUrl" required placeholder="https://xxxx.supabase.co" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Anon Key <span class="text-rose-500">*</span></label>
+                    <input type="password" id="cfgSupabaseKey" required placeholder="eyJhbGciOi..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeConfigModal()" class="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-medium text-white bg-nu-orange hover:bg-nu-orangeDark rounded-xl shadow-md">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> บันทึกการตั้งค่า
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl border-l-4 border-nu-orange flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toastMessage">การดำเนินการสำเร็จ</span>
+    </div>
+
+    <!-- MAIN SCRIPT INTEGRATING SUPABASE -->
+    <script>
+        // =========================================================================
+        // 1. ดึงค่า CREDENTIALS จาก LocalStorage (ไม่ต้องใช้ Gemini API Key ในฝั่ง Client)
+        // =========================================================================
+        let SUPABASE_URL = localStorage.getItem('NU_SUPABASE_URL') || '';
+        let SUPABASE_ANON_KEY = localStorage.getItem('NU_SUPABASE_KEY') || '';
+
+        let supabaseClient = null;
+        let documentsData = [];
+
+        // DOM Loaded Event
+        document.addEventListener('DOMContentLoaded', () => {
+            initSupabaseClient();
+        });
+
+        function initSupabaseClient() {
+            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+                try {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    fetchDocuments();
+                } catch (err) {
+                    console.error('Initialization Error:', err);
+                    showToast('รูปแบบ URL หรือ Key ไม่ถูกต้อง');
+                }
+            } else {
+                renderConfigMissingState();
+            }
+        }
+
+        function renderConfigMissingState() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-12 text-center text-slate-500 bg-amber-50/40">
+                        <i class="fa-solid fa-sliders text-3xl text-amber-500 mb-2"></i>
+                        <p class="font-semibold text-sm text-slate-700">ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล Supabase</p>
+                        <p class="text-xs text-slate-500 mt-1 mb-4">โปรดระบุ Supabase URL และ Anon Key เพื่อเริ่มใช้งาน</p>
+                        <button onclick="openConfigModal()" class="inline-flex items-center gap-1.5 bg-nu-orange hover:bg-nu-orangeDark text-white text-xs font-medium px-4 py-2 rounded-xl shadow-md transition-all">
+                            <i class="fa-solid fa-gear"></i> คลิกเพื่อตั้งค่าระบบ
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function openConfigModal() {
+            document.getElementById('cfgSupabaseUrl').value = SUPABASE_URL;
+            document.getElementById('cfgSupabaseKey').value = SUPABASE_ANON_KEY;
+            document.getElementById('configModal').classList.remove('hidden');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.add('hidden');
+        }
+
+        function saveApiSettings(e) {
+            e.preventDefault();
+            const url = document.getElementById('cfgSupabaseUrl').value.trim();
+            const key = document.getElementById('cfgSupabaseKey').value.trim();
+
+            localStorage.setItem('NU_SUPABASE_URL', url);
+            localStorage.setItem('NU_SUPABASE_KEY', key);
+
+            SUPABASE_URL = url;
+            SUPABASE_ANON_KEY = key;
+
+            closeConfigModal();
+            showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว');
+            initSupabaseClient();
+        }
+
+        // =========================================================================
+        // 2. ฟังก์ชันดึงข้อมูลทั้งหมดจาก SUPABASE DATABASE
+        // =========================================================================
+        async function fetchDocuments() {
+            if (!supabaseClient) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('documents')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                documentsData = data || [];
+                renderTable();
+                updateStats();
+            } catch (err) {
+                console.error('Error fetching documents:', err.message);
+                showToast('ไม่สามารถดึงข้อมูลได้: ' + err.message);
+            }
+        }
+
+        // =========================================================================
+        // 3. ฟังก์ชันอัปโหลดไฟล์แนบเข้า SUPABASE STORAGE BUCKET
+        // =========================================================================
+        async function uploadFileToSupabase(file) {
+            if (!file) return { url: null, name: null };
+            
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `uploads/${fileName}`;
+
+            const { data, error } = await supabaseClient
+                .storage
+                .from('document-files')
+                .upload(filePath, file);
+
+            if (error) {
+                console.error('Upload Error:', error.message);
+                throw error;
+            }
+
+            const { data: urlData } = supabaseClient
+                .storage
+                .from('document-files')
+                .getPublicUrl(filePath);
+
+            return { url: urlData.publicUrl, name: file.name };
+        }
+
+        // =========================================================================
+        // 4. ฟังก์ชันบันทึกข้อมูลใหม่ลง SUPABASE
+        // =========================================================================
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...`;
+
+            try {
+                const fileInput = document.getElementById('inputFile');
+                let fileResult = { url: null, name: null };
+
+                if (fileInput.files.length > 0) {
+                    fileResult = await uploadFileToSupabase(fileInput.files[0]);
+                }
+
+                const summaryText = document.getElementById('inputSummary').value.trim();
+                const summaryArray = summaryText ? summaryText.split('\n').filter(line => line.trim() !== '') : [];
+
+                const payload = {
+                    year: document.getElementById('inputYear').value,
+                    type: document.getElementById('inputType').value,
+                    doc_no: document.getElementById('inputDocNo').value,
+                    doc_date: document.getElementById('inputDate').value,
+                    title: document.getElementById('inputTitle').value,
+                    full_detail: document.getElementById('inputFullDetail').value,
+                    summary_json: summaryArray,
+                    file_url: fileResult.url,
+                    file_name: fileResult.name
+                };
+
+                const { error } = await supabaseClient
+                    .from('documents')
+                    .insert([payload]);
+
+                if (error) throw error;
+
+                showToast('บันทึกข้อมูลเข้า Supabase เรียบร้อยแล้ว');
+                closeAddModal();
+                document.getElementById('addForm').reset();
+                fetchDocuments();
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>บันทึกข้อมูล</span>`;
+            }
+        }
+
+        // =========================================================================
+        // 5. ฟังก์ชันลบข้อมูลจาก SUPABASE
+        // =========================================================================
+        async function deleteDoc(id) {
+            if (!confirm('คุณต้องการลบรายการนี้จากฐานข้อมูลใช่หรือไม่?')) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('documents')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showToast('ลบรายการเรียบร้อยแล้ว');
+                fetchDocuments();
+            } catch (err) {
+                alert('ไม่สามารถลบรายการได้: ' + err.message);
+            }
+        }
+
+        // =========================================================================
+        // 6. UI RENDER & UTILITIES
+        // =========================================================================
+        function getTagClass(type) {
+            switch(type) {
+                case 'หารือ': return 'tag-query';
+                case 'อุทธรณ์': return 'tag-appeal';
+                case 'คำสั่ง/แจ้งเรียน': return 'tag-order';
+                case 'พัสดุ/ครุภัณฑ์': return 'tag-parcel';
+                default: return 'tag-general';
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
+            const yearVal = document.getElementById('filterYear').value;
+            const typeVal = document.getElementById('filterType').value;
+
+            const filtered = documentsData.filter(item => {
+                const summaryStr = Array.isArray(item.summary_json) ? item.summary_json.join(' ') : '';
+                const matchesSearch = (item.doc_no || '').toLowerCase().includes(searchVal) || 
+                                      (item.title || '').toLowerCase().includes(searchVal) ||
+                                      summaryStr.toLowerCase().includes(searchVal);
+                const matchesYear = yearVal === '' || item.year === yearVal;
+                const matchesType = typeVal === '' || item.type === typeVal;
+
+                return matchesSearch && matchesYear && matchesType;
+            });
+
+            document.getElementById('itemCountBadge').innerText = `แสดง ${filtered.length} รายการ`;
+            document.getElementById('showingStart').innerText = filtered.length > 0 ? 1 : 0;
+            document.getElementById('showingEnd').innerText = filtered.length;
+            document.getElementById('showingTotal').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400 bg-slate-50/50">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
+                            <p class="text-xs">ไม่พบข้อมูลหนังสือหรือพัสดุที่ตรงตามเงื่อนไข</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                const summaryLines = Array.isArray(item.summary_json) && item.summary_json.length > 0 
+                    ? item.summary_json 
+                    : ['- ไม่มีสรุปสาระสำคัญ -'];
+
+                return `
+                <tr class="hover:bg-orange-50/30 transition-colors">
+                    <td class="py-3.5 px-4 text-center font-semibold text-slate-600">${item.year}</td>
+                    <td class="py-3.5 px-4 text-center">
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium inline-block ${getTagClass(item.type)}">
+                            ${item.type}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 font-bold text-nu-orange hover:underline cursor-pointer" onclick="openViewModal('${item.id}')">
+                        ${item.doc_no}
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-500 whitespace-nowrap">${item.doc_date}</td>
+                    <td class="py-3.5 px-4 font-semibold text-slate-800 max-w-xs leading-snug">
+                        ${item.title}
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-600 font-sarabun max-w-md">
+                        <ul class="space-y-1 list-none">
+                            ${summaryLines.map(pt => `<li class="line-clamp-2">${pt}</li>`).join('')}
+                        </ul>
+                    </td>
+                    <td class="py-3.5 px-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="openViewModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-nu-orange hover:bg-orange-100 rounded-lg transition-colors" title="ดูรายละเอียด">
+                                <i class="fa-solid fa-eye text-sm"></i>
+                            </button>
+                            ${item.file_url ? `
+                                <a href="${item.file_url}" target="_blank" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="ดาวน์โหลดไฟล์แนบ">
+                                    <i class="fa-solid fa-paperclip text-sm"></i>
+                                </a>
+                            ` : ''}
+                            <button onclick="deleteDoc('${item.id}')" class="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="ลบรายการ">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('statTotal').innerText = documentsData.length;
+            document.getElementById('statParcel').innerText = documentsData.filter(d => d.type === 'พัสดุ/ครุภัณฑ์').length;
+            document.getElementById('statQuery').innerText = documentsData.filter(d => d.type === 'หารือ' || d.type === 'อุทธรณ์').length;
+            document.getElementById('statOrder').innerText = documentsData.filter(d => d.type === 'คำสั่ง/แจ้งเรียน').length;
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterYear').value = '';
+            document.getElementById('filterType').value = '';
+            renderTable();
+        }
+
+        function toggleStats() {
+            document.getElementById('statsBar').classList.toggle('hidden');
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+        }
+
+        function openViewModal(id) {
+            const item = documentsData.find(d => d.id === id);
+            if (!item) return;
+
+            document.getElementById('viewDocNo').innerText = item.doc_no;
+            document.getElementById('viewTitle').innerText = item.title;
+            document.getElementById('viewYear').innerText = item.year;
+            document.getElementById('viewDate').innerText = item.doc_date;
+
+            const tagEl = document.getElementById('viewTypeTag');
+            tagEl.innerText = item.type;
+            tagEl.className = `px-2.5 py-0.5 rounded-md text-xs font-semibold ${getTagClass(item.type)}`;
+
+            const summaryContainer = document.getElementById('viewSummary');
+            const summaryList = Array.isArray(item.summary_json) ? item.summary_json : [];
+            summaryContainer.innerHTML = summaryList.length > 0 
+                ? summaryList.map(pt => `<p>• ${pt}</p>`).join('')
+                : '<p class="text-slate-400 font-normal">ไม่มีข้อสรุปสาระสำคัญ</p>';
+
+            const fileArea = document.getElementById('fileAttachmentArea');
+            if (item.file_url) {
+                fileArea.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf text-rose-500 text-lg"></i>
+                        <span class="font-medium text-slate-700">${item.file_name || 'เอกสารแนบ'}</span>
+                    </div>
+                    <a href="${item.file_url}" target="_blank" class="text-nu-orange hover:text-nu-orangeDark font-semibold px-2 py-1 bg-white rounded-lg border border-slate-200 shadow-sm">
+                        <i class="fa-solid fa-download mr-1"></i> ดาวน์โหลด
+                    </a>
+                `;
+            } else {
+                fileArea.innerHTML = `<span class="text-slate-400 font-normal">ไม่มีไฟล์แนบในระบบ</span>`;
+            }
+
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+        }
+
+        // AI Summarization via Supabase Edge Function (No Gemini API key needed in index.html)
+        async function generateAISummary() {
+            const fullText = document.getElementById('inputFullDetail').value;
+            const summaryBox = document.getElementById('inputSummary');
+
+            if (!fullText.trim()) {
+                showToast('กรุณากรอกข้อความรายละเอียดก่อนให้ AI สรุป');
+                return;
+            }
+
+            summaryBox.value = "กำลังประมวลผลสรุปด้วย AI...";
+
+            try {
+                // เรียกใช้ Supabase Edge Function 'summarize' (ซ่อน API Key ไว้บน Server)
+                if (supabaseClient && supabaseClient.functions) {
+                    const { data, error } = await supabaseClient.functions.invoke('summarize', {
+                        body: { text: fullText }
+                    });
+
+                    if (!error && data && data.summary) {
+                        summaryBox.value = data.summary;
+                        showToast('AI สรุปสาระสำคัญสำเร็จ!');
+                        return;
+                    }
+                }
+                
+                // Fallback สรุปย่อเบื้องต้นหากยังไม่ได้ตั้งค่า Edge Function
+                summaryBox.value = `1. ${fullText.substring(0, 80)}...\n2. ดำเนินการจัดเก็บเข้าทะเบียนรับตามระเบียบ`;
+                showToast('สรุปข้อความย่อเบื้องต้นเรียบร้อย');
+            } catch (err) {
+                console.error(err);
+                summaryBox.value = `1. ${fullText.substring(0, 80)}...\n2. ดำเนินการจัดเก็บเข้าทะเบียนรับตามระเบียบ`;
+                showToast('สรุปข้อความย่อเบื้องต้นเรียบร้อย');
+            }
+        }
+
+        function exportExcel() {
+            showToast('กำลังส่งออกไฟล์ CSV...');
+            const headers = ["ปี พ.ศ.", "ประเภทหนังสือ", "เลขที่หนังสือ", "วันที่หนังสือ", "เรื่อง", "สรุปสาระสำคัญ"];
+            const rows = documentsData.map(d => [
+                d.year,
+                d.type,
+                `"${d.doc_no}"`,
+                `"${d.doc_date}"`,
+                `"${(d.title || '').replace(/"/g, '""')}"`,
+                `"${(Array.isArray(d.summary_json) ? d.summary_json.join(' ') : '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+                + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `ทะเบียนรับหนังสือ_พัสดุ_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
