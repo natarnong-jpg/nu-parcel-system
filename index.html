@@ -302,7 +302,6 @@
     <!-- Modal: ลงรับเอกสาร/พัสดุใหม่ -->
     <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl overflow-hidden animate-fade-in max-h-[90vh] flex flex-col">
-            
             <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 px-6 flex items-center justify-between border-b-2 border-nu-orange">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-nu-orange flex items-center justify-center text-white text-sm">
@@ -315,7 +314,75 @@
                 </button>
             </div>
 
-    <!-- Modal: สแกนเอกสาร / รูปภาพ / สลิป (Scan Document / Slip Modal) -->
+            <form id="addForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">ปี พ.ศ. <span class="text-rose-500">*</span></label>
+                        <select id="inputYear" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                            <option value="2568" selected>2568</option>
+                            <option value="2567">2567</option>
+                            <option value="2566">2566</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">ประเภทหนังสือ <span class="text-rose-500">*</span></label>
+                        <select id="inputType" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                            <option value="หารือ">หารือ</option>
+                            <option value="อุทธรณ์">อุทธรณ์</option>
+                            <option value="คำสั่ง/แจ้งเรียน">คำสั่ง/แจ้งเรียน</option>
+                            <option value="พัสดุ/ครุภัณฑ์" selected>พัสดุ/ครุภัณฑ์</option>
+                            <option value="ทั่วไป">ทั่วไป</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">เลขที่หนังสือ / พัสดุ <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputDocNo" required placeholder="เช่น อว 0605/123" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">วันที่หนังสือ <span class="text-rose-500">*</span></label>
+                        <input type="date" id="inputDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">เรื่อง / รายการ <span class="text-rose-500">*</span></label>
+                    <input type="text" id="inputTitle" required placeholder="ระบุชื่อเรื่องหรือชื่อพัสดุ..." class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">รายละเอียดฉบับเต็ม</label>
+                    <textarea id="inputFullDetail" rows="3" placeholder="ระบุรายละเอียดข้อความหนังสือเพื่อใช้ให้ AI สรุป..." class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange"></textarea>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block font-medium text-slate-700">สรุปสาระสำคัญ (AI Summary)</label>
+                        <button type="button" onclick="generateAISummary()" class="text-nu-orange hover:underline font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> สรุปด้วย AI
+                        </button>
+                    </div>
+                    <textarea id="inputSummary" rows="3" placeholder="ระบุข้อสรุป หรือคลิกปุ่มสรุปด้วย AI (บรรทัดละ 1 ข้อ)" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange focus:border-nu-orange font-sarabun"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">ไฟล์แนบ (PDF / รูปภาพ)</label>
+                    <input type="file" id="inputFile" multiple class="w-full text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-nu-orange hover:file:bg-orange-100 cursor-pointer">
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-slate-100 transition-colors">ยกเลิก</button>
+                    <button type="submit" id="submitBtn" class="px-5 py-2 rounded-xl bg-nu-orange hover:bg-nu-orangeDark text-white font-medium shadow-md transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-check"></i> <span>บันทึกข้อมูล</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: สแกนเอกสาร / รูปภาพ / สลิป -->
     <div id="scanModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-xl overflow-hidden animate-fade-in max-h-[90vh] flex flex-col">
             
@@ -347,27 +414,31 @@
 
                 <!-- Camera Stream View -->
                 <div id="scanCameraSection" class="space-y-3">
-                    <div class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center border border-slate-800 shadow-inner group">
+                    <div class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center border border-slate-800 shadow-inner">
                         <video id="scanVideo" autoplay playsinline class="w-full h-full object-cover"></video>
                         <canvas id="scanCanvas" class="hidden"></canvas>
                         
-                        <!-- Camera Framing Guide Overlay -->
+                        <!-- Overlay Guide -->
                         <div class="absolute inset-4 border-2 border-dashed border-purple-400/70 rounded-xl pointer-events-none flex flex-col justify-between p-3">
                             <div class="flex justify-between text-[10px] text-purple-300 bg-slate-900/60 px-2 py-0.5 rounded backdrop-blur-sm self-start">
                                 <span><i class="fa-solid fa-crop-simple mr-1"></i> วางเอกสาร/สลิปให้อยู่ในกรอบ</span>
-    
-</div>
+                            </div>
+                        </div>
+                        <p id="cameraStatusText" class="absolute text-xs text-amber-300 bg-slate-900/80 px-3 py-1 rounded-lg">กำลังเปิดกล้อง...</p>
                     </div>
+
+                    <button type="button" onclick="captureCameraPhoto()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-circle-dot text-rose-400"></i> ถ่ายภาพสแกน
+                    </button>
                 </div>
 
-                <!-- Upload Section (ส่วนที่หายไป) -->
+                <!-- Upload Section -->
                 <div id="scanUploadSection" class="space-y-4 hidden flex-1 flex flex-col">
                     <div class="border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors">
                         <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-400 mb-3"></i>
                         <p class="text-sm font-semibold text-slate-700">ลากไฟล์มาวาง หรือ คลิกเพื่อเลือกไฟล์</p>
                         <p class="text-xs text-slate-500 mt-1 mb-4">รองรับไฟล์รูปภาพ, สลิปโอนเงิน (หลายไฟล์พร้อมกันได้)</p>
                         
-                        <!-- นี่คือช่องอัปโหลดที่ใส่คำว่า multiple แล้วครับ -->
                         <input type="file" id="scanFileInput" multiple accept="image/*,application/pdf" onchange="handleScanFileSelect(event)" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer">
                     </div>
                 </div>
@@ -386,13 +457,83 @@
         </div>
     </div>
 
-<!-- MAIN SCRIPT INTEGRATING SUPABASE & PWA -->
+    <!-- Modal: ดูรายละเอียดเอกสาร -->
+    <div id="viewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-xl overflow-hidden animate-fade-in max-h-[90vh] flex flex-col">
+            <div class="bg-slate-900 text-white p-4 px-6 flex items-center justify-between border-b-2 border-nu-orange">
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-lines text-nu-orange"></i> รายละเอียดหนังสือ / พัสดุ
+                </h3>
+                <button onclick="closeViewModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-xs overflow-y-auto custom-scrollbar flex-1">
+                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div>
+                        <p class="text-slate-400 text-[10px]">เลขที่เอกสาร</p>
+                        <p id="viewDocNo" class="font-bold text-sm text-nu-orange">-</p>
+                    </div>
+                    <span id="viewTypeTag" class="px-2.5 py-0.5 rounded-md text-xs font-semibold">-</span>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[10px]">เรื่อง / รายการ</p>
+                    <p id="viewTitle" class="font-semibold text-sm text-slate-800 mt-0.5">-</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-slate-600">
+                    <div><span class="text-slate-400">ปี พ.ศ.:</span> <span id="viewYear">-</span></div>
+                    <div><span class="text-slate-400">วันที่:</span> <span id="viewDate">-</span></div>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[10px] mb-1">สรุปสาระสำคัญ (AI Summary)</p>
+                    <div id="viewSummary" class="bg-orange-50/50 p-3 rounded-xl border border-orange-100 space-y-1 font-sarabun text-slate-700"></div>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[10px] mb-1">ไฟล์แนบ</p>
+                    <div id="fileAttachmentArea" class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: ตั้งค่าการเชื่อมต่อ (Config Modal) -->
+    <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden animate-fade-in">
+            <div class="bg-slate-900 text-white p-4 px-6 flex items-center justify-between border-b-2 border-nu-orange">
+                <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-nu-orange"></i> ตั้งค่าการเชื่อมต่อ Supabase
+                </h3>
+                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form onsubmit="saveApiSettings(event)" class="p-6 space-y-4 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Supabase URL</label>
+                    <input type="text" id="cfgSupabaseUrl" placeholder="https://xyz.supabase.co" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Supabase Anon Key</label>
+                    <input type="password" id="cfgSupabaseKey" placeholder="eyJhbGciOi..." class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-nu-orange">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeConfigModal()" class="px-4 py-2 rounded-xl border border-slate-300">ยกเลิก</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-nu-orange text-white font-medium shadow-md">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification (ป๊อปอัปแจ้งเตือน) -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-[100]">
+        <i class="fa-solid fa-circle-info text-nu-orange"></i>
+        <span id="toastMessage" class="text-sm font-medium">ข้อความแจ้งเตือน</span>
+    </div>
+
+    <!-- MAIN SCRIPT INTEGRATING SUPABASE & PWA -->
     <script>
-        // =========================================================================
-        // 0. PWA MANIFEST & SERVICE WORKER REGISTRATION (สร้างและลงทะเบียน PWA)
-        // =========================================================================
+        // 0. PWA MANIFEST & SERVICE WORKER REGISTRATION
         (function initPWA() {
-            // สร้าง Dynamic Web App Manifest
             const manifestObj = {
                 name: "ระบบงานพัสดุและหนังสือรับเข้า (NU)",
                 short_name: "งานพัสดุ NU",
@@ -423,7 +564,6 @@
             linkEl.href = manifestURL;
             document.head.appendChild(linkEl);
 
-            // ลงทะเบียน Service Worker แบบ Inline Blob
             if ('serviceWorker' in navigator) {
                 const swCode = `
                     const CACHE_NAME = 'nu-parcel-pwa-v1';
@@ -460,7 +600,6 @@
             }
         })();
 
-        // ตัวแปร PWA Prompt Handling
         let deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -481,7 +620,6 @@
             });
         }
 
-        // ติดตามสถานะ Online / Offline
         window.addEventListener('online', updateNetworkStatus);
         window.addEventListener('offline', updateNetworkStatus);
 
@@ -494,26 +632,21 @@
                 badge.className = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1";
                 icon.className = "fa-solid fa-wifi text-[10px]";
                 text.innerText = "ออนไลน์";
-                showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว');
                 fetchDocuments();
             } else {
                 badge.className = "bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1";
                 icon.className = "fa-solid fa-plane text-[10px]";
                 text.innerText = "ออฟไลน์ (ใช้งานจากแคช)";
-                showToast('กำลังใช้งานโหมดออฟไลน์');
             }
         }
 
-        // =========================================================================
-        // 1. ดึงค่า CREDENTIALS จาก LocalStorage
-        // =========================================================================
+        // 1. CREDENTIALS & INITIALIZATION
         let SUPABASE_URL = localStorage.getItem('NU_SUPABASE_URL') || '';
         let SUPABASE_ANON_KEY = localStorage.getItem('NU_SUPABASE_KEY') || '';
 
         let supabaseClient = null;
         let documentsData = [];
 
-        // DOM Loaded Event
         document.addEventListener('DOMContentLoaded', () => {
             updateNetworkStatus();
             initSupabaseClient();
@@ -575,11 +708,8 @@
             initSupabaseClient();
         }
 
-        // =========================================================================
-        // 2. ฟังก์ชันดึงข้อมูลทั้งหมดจาก SUPABASE DATABASE (พร้อมระบบ Offline Cache)
-        // =========================================================================
+        // 2. FETCH DOCUMENTS
         async function fetchDocuments() {
-            // โหลดข้อมูลออฟไลน์จาก LocalStorage ก่อน
             const cachedData = localStorage.getItem('NU_OFFLINE_DOCS_CACHE');
             if (cachedData) {
                 try {
@@ -600,7 +730,6 @@
                 if (error) throw error;
 
                 documentsData = data || [];
-                // บันทึกใส่ LocalStorage สำหรับเปิดอ่านออฟไลน์
                 localStorage.setItem('NU_OFFLINE_DOCS_CACHE', JSON.stringify(documentsData));
                 
                 renderTable();
@@ -611,9 +740,7 @@
             }
         }
 
-        // =========================================================================
-        // 3. ฟังก์ชันอัปโหลดไฟล์แนบเข้า SUPABASE STORAGE BUCKET
-        // =========================================================================
+        // 3. UPLOAD FILE TO STORAGE
         async function uploadFileToSupabase(file) {
             if (!file) return { url: null, name: null };
             
@@ -639,9 +766,7 @@
             return { url: urlData.publicUrl, name: file.name };
         }
 
-        // =========================================================================
-        // 4. ฟังก์ชันบันทึกข้อมูลใหม่ลง SUPABASE
-        // =========================================================================
+        // 4. SAVE NEW FORM DATA
         async function handleFormSubmit(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -653,7 +778,7 @@
                 let fileResult = { url: null, name: null };
 
                 if (fileInput.files.length > 0) {
-                    fileResult = await uploadFileToSupabase(fileInput.files);
+                    fileResult = await uploadFileToSupabase(fileInput.files[0]);
                 }
 
                 const summaryText = document.getElementById('inputSummary').value.trim();
@@ -689,9 +814,7 @@
             }
         }
 
-        // =========================================================================
-        // 5. ฟังก์ชันลบข้อมูลจาก SUPABASE
-        // =========================================================================
+        // 5. DELETE DOC
         async function deleteDoc(id) {
             if (!confirm('คุณต้องการลบรายการนี้จากฐานข้อมูลใช่หรือไม่?')) return;
 
@@ -710,9 +833,7 @@
             }
         }
 
-        // =========================================================================
         // 6. UI RENDER & UTILITIES
-        // =========================================================================
         function getTagClass(type) {
             switch(type) {
                 case 'หารือ': return 'tag-query';
@@ -868,9 +989,7 @@
             document.getElementById('viewModal').classList.add('hidden');
         }
 
-        // =========================================================================
-        // 7. SCANNER & CAMERA MODULE (สแกนเอกสาร / รูปภาพ / สลิป)
-        // =========================================================================
+        // 7. SCANNER MODULE
         let cameraStream = null;
         let scannedFileBlobs = [];
         let scannedExtractedData = null;
@@ -934,55 +1053,67 @@
         }
 
         function captureCameraPhoto() {
-    const video = document.getElementById('scanVideo');
-    const canvas = document.getElementById('scanCanvas');
-    
-    if (!video.videoWidth) {
-        showToast('กล้องยังไม่พร้อมใช้งาน');
-        return;
-    }
+            const video = document.getElementById('scanVideo');
+            const canvas = document.getElementById('scanCanvas');
+            
+            if (!video.videoWidth) {
+                showToast('กล้องยังไม่พร้อมใช้งาน');
+                return;
+            }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    canvas.toBlob((blob) => {
-        // สร้างชื่อไฟล์รันตามเวลา
-        const file = new File([blob], `scan_page_${scannedFileBlobs.length + 1}_${Date.now()}.jpg`, { type: 'image/jpeg' });
-        scannedFileBlobs.push(file); // เพิ่มไฟล์เข้า Array
-        
-        const imageUrl = URL.createObjectURL(blob);
-        displayScannedPreview(imageUrl);
-        processScannedData(); // อัปเดตข้อมูล AI ขำๆ ว่ามีกี่หน้า
-        
-        showToast(`ถ่ายภาพหน้าที่ ${scannedFileBlobs.length} สำเร็จ (ถ่ายต่อได้เลย)`);
-    }, 'image/jpeg', 0.9);
-    
-    // เอาคำสั่ง stopCameraStream(); ออก เพื่อให้กล้องยังทำงานต่อรอถ่ายหน้าถัดไป
-}
+            canvas.toBlob((blob) => {
+                const file = new File([blob], `scan_page_${scannedFileBlobs.length + 1}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                scannedFileBlobs.push(file);
+                
+                const imageUrl = URL.createObjectURL(blob);
+                displayScannedPreview(imageUrl);
+                processScannedData();
+                
+                showToast(`ถ่ายภาพหน้าที่ ${scannedFileBlobs.length} สำเร็จ`);
+            }, 'image/jpeg', 0.9);
+        }
 
         function handleScanFileSelect(event) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
 
-    // วนลูปเก็บทุกไฟล์ที่เลือกเข้ามา
-    for (let i = 0; i < files.length; i++) {
-        scannedFileBlobs.push(files[i]);
-    }
+            for (let i = 0; i < files.length; i++) {
+                scannedFileBlobs.push(files[i]);
+            }
 
-    // แสดงพรีวิวไฟล์ล่าสุด
-    const lastFile = files[files.length - 1];
-    if (lastFile.type.startsWith('image/')) {
-        const imageUrl = URL.createObjectURL(lastFile);
-        displayScannedPreview(imageUrl);
-    } else {
-        displayScannedPreview('https://placehold.co/600x400/1e1b4b/ffffff?text=Multiple+Files');
-    }
-    
-    showToast(`เลือกไฟล์ทั้งหมด ${scannedFileBlobs.length} ไฟล์`);
-    processScannedData();
-}
+            const lastFile = files[files.length - 1];
+            if (lastFile.type.startsWith('image/')) {
+                const imageUrl = URL.createObjectURL(lastFile);
+                displayScannedPreview(imageUrl);
+            } else {
+                displayScannedPreview('https://placehold.co/600x400/1e1b4b/ffffff?text=Multiple+Files');
+            }
+            
+            showToast(`เลือกไฟล์ทั้งหมด ${scannedFileBlobs.length} ไฟล์`);
+            processScannedData();
+        }
+
+        function processScannedData() {
+            // จำลองการประมวลผลอ่านไฟล์ด้วย AI
+            setTimeout(() => {
+                scannedExtractedData = {
+                    year: "2568",
+                    type: "พัสดุ/ครุภัณฑ์",
+                    docNo: "อว " + Math.floor(1000 + Math.random() * 9000) + "/2568",
+                    date: new Date().toISOString().split('T')[0],
+                    title: "รายการพัสดุรับเข้าจากการสแกนเอกสาร/สลิป",
+                    detail: "รายละเอียดเอกสารที่ดึงข้อมูลสำเร็จจากไฟล์ภาพ/กล้องสแกน",
+                    summary: ["1. ตรวจสอบรายการสแกนเอกสารเรียบร้อยแล้ว", "2. พร้อมนำข้อมูลลงรับเข้าสู่ระบบ"]
+                };
+                document.getElementById('aiScanLoader').classList.add('hidden');
+                document.getElementById('applyScanBtn').disabled = false;
+            }, 800);
+        }
 
         function displayScannedPreview(src) {
             document.getElementById('scannedImagePreview').src = src;
@@ -992,43 +1123,43 @@
         }
 
         function resetScanPreview() {
-    document.getElementById('scanPreviewContainer').classList.add('hidden');
-    document.getElementById('applyScanBtn').disabled = true;
-    
-    const fileInput = document.getElementById('scanFileInput'); // ถ้ามี ID นี้
-    if(fileInput) fileInput.value = '';
-    
-    scannedFileBlobs = []; // เคลียร์ Array
-    scannedExtractedData = null;
-    if (!document.getElementById('scanCameraSection').classList.contains('hidden')) {
-        startCameraStream();
-    }
-}
+            document.getElementById('scanPreviewContainer').classList.add('hidden');
+            document.getElementById('applyScanBtn').disabled = true;
+            
+            const fileInput = document.getElementById('scanFileInput');
+            if(fileInput) fileInput.value = '';
+            
+            scannedFileBlobs = [];
+            scannedExtractedData = null;
+            if (!document.getElementById('scanCameraSection').classList.contains('hidden')) {
+                startCameraStream();
+            }
+        }
 
-function applyScanDataToForm() {
-    if (!scannedExtractedData) return;
+        function applyScanDataToForm() {
+            if (!scannedExtractedData) return;
 
-    openAddModal();
+            openAddModal();
 
-    document.getElementById('inputYear').value = scannedExtractedData.year;
-    document.getElementById('inputType').value = scannedExtractedData.type;
-    document.getElementById('inputDocNo').value = scannedExtractedData.docNo;
-    document.getElementById('inputDate').value = scannedExtractedData.date;
-    document.getElementById('inputTitle').value = scannedExtractedData.title;
-    document.getElementById('inputFullDetail').value = scannedExtractedData.detail;
-    document.getElementById('inputSummary').value = scannedExtractedData.summary.join('\n');
+            document.getElementById('inputYear').value = scannedExtractedData.year;
+            document.getElementById('inputType').value = scannedExtractedData.type;
+            document.getElementById('inputDocNo').value = scannedExtractedData.docNo;
+            document.getElementById('inputDate').value = scannedExtractedData.date;
+            document.getElementById('inputTitle').value = scannedExtractedData.title;
+            document.getElementById('inputFullDetail').value = scannedExtractedData.detail;
+            document.getElementById('inputSummary').value = scannedExtractedData.summary.join('\n');
 
-    // นำไฟล์ทั้งหมดใน Array ยัดใส่ input file ของฟอร์ม
-    if (scannedFileBlobs.length > 0) {
-        const dataTransfer = new DataTransfer();
-        scannedFileBlobs.forEach(file => dataTransfer.items.add(file));
-        document.getElementById('inputFile').files = dataTransfer.files;
-    }
+            if (scannedFileBlobs.length > 0) {
+                const dataTransfer = new DataTransfer();
+                scannedFileBlobs.forEach(file => dataTransfer.items.add(file));
+                document.getElementById('inputFile').files = dataTransfer.files;
+            }
 
-    closeScanModal();
-    showToast(`นำข้อมูลพร้อมไฟล์แนบ ${scannedFileBlobs.length} รายการเข้าฟอร์มแล้ว`);
-}
-        // AI Summarization via Supabase Edge Function (No Gemini API key needed in index.html)
+            closeScanModal();
+            showToast(`นำข้อมูลพร้อมไฟล์แนบ ${scannedFileBlobs.length} รายการเข้าฟอร์มแล้ว`);
+        }
+
+        // AI Summarization
         async function generateAISummary() {
             const fullText = document.getElementById('inputFullDetail').value;
             const summaryBox = document.getElementById('inputSummary');
@@ -1041,7 +1172,6 @@ function applyScanDataToForm() {
             summaryBox.value = "กำลังประมวลผลสรุปด้วย AI...";
 
             try {
-                // เรียกใช้ Supabase Edge Function 'summarize' (ซ่อน API Key ไว้บน Server)
                 if (supabaseClient && supabaseClient.functions) {
                     const { data, error } = await supabaseClient.functions.invoke('summarize', {
                         body: { text: fullText }
@@ -1054,7 +1184,6 @@ function applyScanDataToForm() {
                     }
                 }
                 
-                // Fallback สรุปย่อเบื้องต้นหากยังไม่ได้ตั้งค่า Edge Function
                 summaryBox.value = `1. ${fullText.substring(0, 80)}...\n2. ดำเนินการจัดเก็บเข้าทะเบียนรับตามระเบียบ`;
                 showToast('สรุปข้อความย่อเบื้องต้นเรียบร้อย');
             } catch (err) {
@@ -1064,7 +1193,13 @@ function applyScanDataToForm() {
             }
         }
 
+        // EXPORT EXCEL (CSV)
         function exportExcel() {
+            if (!documentsData || documentsData.length === 0) {
+                showToast('ไม่มีข้อมูลสำหรับส่งออก');
+                return;
+            }
+
             showToast('กำลังส่งออกไฟล์ CSV...');
             const headers = ["ปี พ.ศ.", "ประเภทหนังสือ", "เลขที่หนังสือ", "วันที่หนังสือ", "เรื่อง", "สรุปสาระสำคัญ"];
             const rows = documentsData.map(d => [
