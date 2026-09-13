@@ -1158,20 +1158,24 @@ async function processScannedData() {
             summary: data?.summary || "1. สแกนและอ่านข้อมูลด้วย AI สำเร็จ"
         };
 
-    } catch (error) {
+} catch (error) {
         console.error("Edge Function Scan Error:", error);
-        showToast("ไม่สามารถอ่านข้อมูลด้วย AI ได้ (ใช้ข้อมูลเริ่มต้น)");
+        showToast("ไม่สามารถอ่านข้อมูลด้วย AI ได้ (ใช้ข้อมูลสำรองจากชื่อไฟล์)");
         
-        // กรณี Edge Function ขัดข้อง ให้ใช้ค่าเริ่มต้นสำรองไว้
+        // ดึงข้อความส่วนแรกของชื่อไฟล์มาเป็นเลขที่หนังสือสำรอง (ตัดเฉพาะช่วงก่อนคำว่า การอนุมัติ/เรื่อง)
+        const fileNameWithoutExt = lastFile.name.replace(/\.[^/.]+$/, "");
+        const fallbackDocNo = fileNameWithoutExt.split('_').slice(0, 3).join(' ');
+
         scannedExtractedData = {
             year: new Date().getFullYear() + 543 + "",
             type: "พัสดุ/ครุภัณฑ์",
-            docNo: "",
+            docNo: fallbackDocNo || "", // ดึง กวว _ว630_200869 มาใส่เป็นเลขที่หนังสือให้อัตโนมัติ
             date: new Date().toISOString().split('T')[0],
-            title: scannedFileBlobs[scannedFileBlobs.length - 1]?.name.replace(/\.[^/.]+$/, "") || "",
-            detail: "เอกสารจากไฟล์สแกน",
-            summary: "กรุณาตรวจสอบและกรอกข้อมูลเพิ่มเติม"
+            title: fileNameWithoutExt,
+            detail: "เอกสารจากไฟล์สแกน: " + lastFile.name,
+            summary: "1. ตรวจสอบรายละเอียดเอกสารสแกน\n2. บันทึกข้อมูลเข้าสู่ระบบ"
         };
+    }
     } finally {
         document.getElementById('aiScanLoader').classList.add('hidden');
         document.getElementById('applyScanBtn').disabled = false;
